@@ -10,7 +10,7 @@ import { resolve } from 'path';
  * Called once per content script via:
  *   CONTENT_ENTRY=reddit vite build --config vite.config.content.ts
  *
- * Produces: dist/content/{reddit|twitter|youtube}.js as IIFE bundles.
+ * Produces: dist/content/{reddit|twitter}.js as IIFE bundles.
  */
 
 const entry = process.env.CONTENT_ENTRY ?? 'reddit';
@@ -18,7 +18,6 @@ const entry = process.env.CONTENT_ENTRY ?? 'reddit';
 const entryMap: Record<string, string> = {
   reddit: 'src/content/reddit/reddit.content.ts',
   twitter: 'src/content/twitter/twitter.content.ts',
-  youtube: 'src/content/youtube/youtube.content.ts',
 };
 
 const entryFile = entryMap[entry];

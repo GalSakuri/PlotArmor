@@ -8,20 +8,18 @@ export function useSiteSettings() {
   const [sites, setSites] = useState<SiteStates>({
     reddit: true,
     twitter: true,
-    youtube: true,
   });
 
   useEffect(() => {
     Promise.all([
       getSiteEnabled('reddit'),
       getSiteEnabled('twitter'),
-      getSiteEnabled('youtube'),
-    ]).then(([reddit, twitter, youtube]) => {
-      setSites({ reddit, twitter, youtube });
+    ]).then(([reddit, twitter]) => {
+      setSites({ reddit, twitter });
     });
 
     const listener = (changes: { [key: string]: chrome.storage.StorageChange }) => {
-      const keys: SiteId[] = ['reddit', 'twitter', 'youtube'];
+      const keys: SiteId[] = ['reddit', 'twitter'];
       keys.forEach(id => {
         const key = `site_${id}` as const;
         if (changes[key]) {

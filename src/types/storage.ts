@@ -1,4 +1,4 @@
-export type SiteId = 'reddit' | 'twitter' | 'youtube';
+export type SiteId = 'reddit' | 'twitter';
 
 export interface WatchEntry {
   id: string;
@@ -20,7 +20,6 @@ export interface PlotArmorStorage {
   /** Per-site enable flags */
   site_reddit: boolean;
   site_twitter: boolean;
-  site_youtube: boolean;
   /** Watching list entries */
   watch_list: WatchEntry[];
   /** Lifetime spoiler-hidden counter */

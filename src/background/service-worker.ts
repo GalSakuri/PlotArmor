@@ -18,7 +18,6 @@ chrome.runtime.onInstalled.addListener(async ({ reason }) => {
       keywords: [],
       site_reddit: true,
       site_twitter: true,
-      site_youtube: true,
       watch_list: [],
       stats_hidden_count: 0,
       stats_hidden_today: 0,

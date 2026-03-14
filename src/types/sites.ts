@@ -62,23 +62,4 @@ export const SITE_CONFIGS: Record<SiteId, SiteConfig> = {
     ],
     isSPA: true,
   },
-  youtube: {
-    id: 'youtube',
-    label: 'YouTube',
-    selectors: [
-      '#video-title',
-      '#title h1',
-      '#description-inner',
-      '#content-text',              // comments
-      'ytd-rich-grid-media #video-title',
-      'ytd-compact-video-renderer #video-title',
-    ],
-    containerSelector: 'ytd-rich-item-renderer, ytd-compact-video-renderer, ytd-video-renderer, ytd-grid-video-renderer',
-    mediaSelectors: [
-      'ytd-thumbnail',
-      '#thumbnail',
-      'ytd-rich-grid-media img',
-    ],
-    isSPA: true,
-  },
 };

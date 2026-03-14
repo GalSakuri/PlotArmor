@@ -109,19 +109,18 @@ async function bootstrap(
         const matchedEl = nodes[idx];
         const keyword = nodeMatches[0].keyword;
 
-        // Blur the text element
-        cloaker.cloak(matchedEl, keyword);
-
-        // Walk up to the post container and blur all media inside it
-        if (containerSelector && mediaSelectors?.length) {
+        // If we have a container selector, blur the entire post container
+        // so text + images + videos are all covered by one overlay.
+        // Otherwise fall back to blurring just the text element.
+        if (containerSelector) {
           const container = matchedEl.closest(containerSelector);
           if (container) {
-            const mediaSel = mediaSelectors.join(', ');
-            const mediaEls = container.querySelectorAll(mediaSel);
-            for (const mediaEl of mediaEls) {
-              cloaker.cloak(mediaEl, keyword);
-            }
+            cloaker.cloak(container as HTMLElement, keyword);
+          } else {
+            cloaker.cloak(matchedEl, keyword);
           }
+        } else {
+          cloaker.cloak(matchedEl, keyword);
         }
 
         onMatch?.(matchedEl, nodeMatches);

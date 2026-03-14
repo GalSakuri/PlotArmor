@@ -55,6 +55,7 @@ export class DomScanner {
     this.mutationObserver.observe(root, {
       childList: true,
       subtree: true,
+      characterData: true,
     });
 
     // Initial scan of all existing matching elements
@@ -99,16 +100,43 @@ export class DomScanner {
 
   private onMutation(mutations: MutationRecord[]): void {
     const newNodes: Element[] = [];
+    const textChangedElements = new Set<Element>();
 
     for (const mutation of mutations) {
-      for (const node of mutation.addedNodes) {
-        if (node.nodeType !== Node.ELEMENT_NODE) continue;
-        const el = node as Element;
-        // Check if node itself matches
-        if (this.matchesSelectors(el)) newNodes.push(el);
-        // Check descendants
-        newNodes.push(...this.queryAll(el));
+      if (mutation.type === 'characterData') {
+        // Existing Text node's data changed — find nearest matching ancestor
+        const parent = mutation.target.parentElement;
+        if (parent) {
+          const match = this.findMatchingAncestor(parent);
+          if (match) textChangedElements.add(match);
+        }
+        continue;
       }
+
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as Element;
+          // Check if node itself matches
+          if (this.matchesSelectors(el)) newNodes.push(el);
+          // Check descendants
+          newNodes.push(...this.queryAll(el));
+        } else if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
+          // A Text node was added inside an existing element (e.g., SPA
+          // frameworks that populate text after the shell element is already
+          // in the DOM). Find the nearest matching ancestor and re-scan it.
+          const parent = node.parentElement;
+          if (parent) {
+            const match = this.findMatchingAncestor(parent);
+            if (match) textChangedElements.add(match);
+          }
+        }
+      }
+    }
+
+    // Re-scan elements whose text content changed (remove scanned marker first)
+    for (const el of textChangedElements) {
+      el.removeAttribute(SCANNED_ATTR);
+      newNodes.push(el);
     }
 
     if (newNodes.length > 0) {
@@ -148,20 +176,50 @@ export class DomScanner {
 
     if (batch.length === 0) return;
 
+    // Separate elements with text from empty ones.
+    // Some SPA frameworks add DOM shells first and populate text content
+    // asynchronously — scanning empty elements wastes a cycle and marks
+    // them as done before they have content.
+    const ready: Element[] = [];
+    const empty: Element[] = [];
+    for (const el of batch) {
+      if ((el.textContent ?? '').trim().length > 0) {
+        ready.push(el);
+      } else {
+        empty.push(el);
+      }
+    }
+
+    // Empty elements stay unscanned. Schedule a retry — IntersectionObserver
+    // won't re-fire for elements already in the viewport, and the Text node
+    // mutation might have already been missed.
+    if (empty.length > 0) {
+      setTimeout(() => {
+        for (const el of empty) {
+          if (el.isConnected && !el.hasAttribute(SCANNED_ATTR) && (el.textContent ?? '').trim().length > 0) {
+            this.pendingNodes.add(el);
+          }
+        }
+        if (this.pendingNodes.size > 0) this.flush();
+      }, 500);
+    }
+
+    if (ready.length === 0) return;
+
     // Mark as scanned before the async call to prevent double-processing
-    batch.forEach(el => {
+    ready.forEach(el => {
       el.setAttribute(SCANNED_ATTR, 'true');
       this.intersectionObserver.unobserve(el);
     });
 
-    logger.log(`Flushing ${batch.length} elements to scanner`);
+    logger.log(`Flushing ${ready.length} elements to scanner (${empty.length} deferred — empty text)`);
 
     try {
-      await this.options.onNodes(batch);
+      await this.options.onNodes(ready);
     } catch (err) {
       logger.error('onNodes callback threw:', err);
       // Reset markers so they can be retried
-      batch.forEach(el => el.removeAttribute(SCANNED_ATTR));
+      ready.forEach(el => el.removeAttribute(SCANNED_ATTR));
     }
   }
 
@@ -177,5 +235,15 @@ export class DomScanner {
     return this.options.selectors.some(sel => {
       try { return el.matches(sel); } catch { return false; }
     });
+  }
+
+  /** Walk up from `el` to find the nearest element matching our selectors. */
+  private findMatchingAncestor(el: Element): Element | null {
+    let cur: Element | null = el;
+    while (cur) {
+      if (this.matchesSelectors(cur)) return cur;
+      cur = cur.parentElement;
+    }
+    return null;
   }
 }

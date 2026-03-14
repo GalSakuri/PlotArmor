@@ -2,14 +2,13 @@
   "manifest_version": 3,
   "name": "PlotArmor",
   "version": "1.0.0",
-  "description": "Shield yourself from spoilers on Reddit, Twitter/X, and YouTube.",
+  "description": "Shield yourself from spoilers on Reddit and Twitter/X.",
   "permissions": ["storage", "scripting"],
   "host_permissions": [
     "https://www.reddit.com/*",
     "https://old.reddit.com/*",
     "https://twitter.com/*",
-    "https://x.com/*",
-    "https://www.youtube.com/*"
+    "https://x.com/*"
   ],
   "action": {
     "default_popup": "popup/index.html",
@@ -34,11 +33,6 @@
       "matches": ["https://twitter.com/*", "https://x.com/*"],
       "js": ["content/twitter.js"],
       "run_at": "document_idle"
-    },
-    {
-      "matches": ["https://www.youtube.com/*"],
-      "js": ["content/youtube.js"],
-      "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
@@ -48,8 +42,7 @@
         "https://www.reddit.com/*",
         "https://old.reddit.com/*",
         "https://twitter.com/*",
-        "https://x.com/*",
-        "https://www.youtube.com/*"
+        "https://x.com/*"
       ]
     }
   ],

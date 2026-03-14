@@ -17,14 +17,15 @@ const REVEALED_CLASS = 'pa-revealed';
 const CSS = `
 .${WRAPPER_CLASS} {
   position: relative;
-  display: inline-block;
+  display: block;
   width: 100%;
+  overflow: hidden;
 }
 .${WRAPPER_CLASS} > *:not(.${OVERLAY_CLASS}) {
-  filter: blur(6px);
+  filter: blur(20px) brightness(0.5);
   user-select: none;
   pointer-events: none;
-  transition: filter 0.2s ease;
+  transition: filter 0.3s ease;
 }
 .${WRAPPER_CLASS}.${REVEALED_CLASS} > *:not(.${OVERLAY_CLASS}) {
   filter: none;
@@ -37,8 +38,8 @@ const CSS = `
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
   border-radius: 4px;
   cursor: pointer;
   z-index: 9999;
@@ -48,17 +49,31 @@ const CSS = `
   opacity: 0;
   pointer-events: none;
 }
-.${OVERLAY_CLASS} span {
+.${OVERLAY_CLASS} .pa-overlay-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+}
+.${OVERLAY_CLASS} .pa-overlay-title {
   color: #fff;
   font-family: system-ui, sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  pointer-events: none;
-  padding: 4px 10px;
-  background: rgba(0,0,0,0.5);
+  padding: 6px 14px;
+  background: rgba(0,0,0,0.6);
   border-radius: 20px;
+}
+.${OVERLAY_CLASS} .pa-overlay-keyword {
+  color: rgba(255,255,255,0.7);
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
 }
 `;
 
@@ -78,10 +93,10 @@ export class DomCloaker {
 
   /**
    * Blur a DOM element with the spoiler overlay.
-   * @param el  The element to cloak
-   * @param _keyword  The matching keyword (for future tooltip/metadata use)
+   * @param el       The element to cloak
+   * @param keyword  The matching keyword shown in the overlay
    */
-  cloak(el: Element, _keyword: string): void {
+  cloak(el: Element, keyword: string): void {
     if (el.hasAttribute(CLOAKED_ATTR)) return; // already cloaked
 
     this.enqueue(() => {
@@ -93,9 +108,13 @@ export class DomCloaker {
       wrapper.className = WRAPPER_CLASS;
       wrapper.setAttribute('data-pa-wrapper', 'true');
 
+      const escaped = keyword.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       const overlay = document.createElement('div');
       overlay.className = OVERLAY_CLASS;
-      overlay.innerHTML = '<span>🛡️ Spoiler — Click to reveal</span>';
+      overlay.innerHTML = `<div class="pa-overlay-content">
+        <span class="pa-overlay-title">Spoiler — Click to reveal</span>
+        <span class="pa-overlay-keyword">Triggered by: "${escaped}"</span>
+      </div>`;
 
       overlay.addEventListener('click', (e) => {
         e.stopPropagation();

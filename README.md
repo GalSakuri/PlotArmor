@@ -1,6 +1,6 @@
 # PlotArmor
 
-A high-performance Chrome extension that detects and blurs spoilers for anime, manga, TV shows, and movies across Reddit, Twitter/X, and YouTube.
+A high-performance Chrome extension that detects and blurs spoilers for anime, manga, TV shows, and movies across Reddit and Twitter/X.
 
 ## Features
 
@@ -8,7 +8,7 @@ A high-performance Chrome extension that detects and blurs spoilers for anime, m
 - **Surgical blurring** of text and attached media (images, videos) with click-to-reveal overlays
 - **Viewport-aware scanning** using IntersectionObserver — only processes visible content
 - **Infinite scroll support** via MutationObserver for dynamically loaded content
-- **SPA navigation handling** for Twitter/X and YouTube
+- **SPA navigation handling** for Twitter/X
 - **Real-time hot-reload** — add or remove keywords without refreshing the page
 - **Per-site toggles** to enable/disable protection on each platform
 - **TMDB and MyAnimeList integration** for fetching character names and plot keywords
@@ -19,14 +19,13 @@ A high-performance Chrome extension that detects and blurs spoilers for anime, m
 |------|------|--------|--------|-----------------|---------|
 | Reddit | Yes | Yes | Yes | Yes | — |
 | Twitter / X | Yes | Yes | Yes | Yes | Yes |
-| YouTube | Yes | Yes | — | Yes | Yes |
 
 ## Installation
 
 ### From source
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/PlotArmor.git
+git clone https://github.com/GalSakuri/PlotArmor.git
 cd PlotArmor
 npm install
 npm run build

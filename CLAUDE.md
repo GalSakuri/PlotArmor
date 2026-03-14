@@ -41,7 +41,7 @@ WorkerBridge.init()  ──postMessage──▶  scanner.worker.ts
 Chrome MV3 content scripts declared in `manifest.json` cannot use ES module `import` statements. The build is split into two stages:
 
 1. **`vite.config.ts`** (main build) — Popup, service worker, web worker. ES module format. Code splitting allowed.
-2. **`vite.config.content.ts`** (content scripts) — One IIFE build per site (`CONTENT_ENTRY=reddit|twitter|youtube`). Each content script is fully self-contained (all deps bundled inline). `emptyOutDir: false` to preserve main build output.
+2. **`vite.config.content.ts`** (content scripts) — One IIFE build per site (`CONTENT_ENTRY=reddit|twitter`). Each content script is fully self-contained (all deps bundled inline). `emptyOutDir: false` to preserve main build output.
 
 `npm run build` chains both stages. Entry filenames use `[name].js` (no content hash) since `manifest.json` references them directly.
 
@@ -57,7 +57,7 @@ The Web Worker is loaded via `chrome.runtime.getURL('worker/scanner.worker.js')`
 
 - **`src/worker/worker-bridge.ts`** — Promise-based proxy over `postMessage`. Correlates async scan responses via a `Map<batchId, resolver>` using `crypto.randomUUID()`. Includes a 5s safety timeout per batch.
 
-- **`src/content/common/content-init.ts`** — Shared bootstrap called by all three site scripts. Checks `chrome.storage` for enabled state + keywords, wires up `chrome.storage.onChanged` for hot-reload. Tracks active instances per site via `activeInstances` map and returns a teardown function — SPA navigations (Twitter, YouTube) call this to clean up workers/observers/listeners before re-init, preventing resource leaks.
+- **`src/content/common/content-init.ts`** — Shared bootstrap called by both site scripts. Checks `chrome.storage` for enabled state + keywords, wires up `chrome.storage.onChanged` for hot-reload. Tracks active instances per site via `activeInstances` map and returns a teardown function — SPA navigations (Twitter) call this to clean up workers/observers/listeners before re-init, preventing resource leaks.
 
 - **`src/content/common/dom-scanner.ts`** — `IntersectionObserver` triggers scans only for elements entering the viewport (`rootMargin: '200px'` for pre-scan). `MutationObserver` catches new nodes from infinite scroll. 250ms debounce before flushing a batch. Elements are marked with `data-pa-scanned` to prevent re-scanning.
 
@@ -73,8 +73,8 @@ All worker ↔ main-thread communication uses discriminated unions in `src/types
 
 ### Site-specific selectors
 
-CSS selectors for each site live in `src/types/sites.ts` (`SITE_CONFIGS`). Reddit supports both new Reddit (shreddit web components) and old Reddit. Twitter and YouTube re-call `initContentScript()` on SPA navigation events (`pushState` intercept and `yt-navigate-finish` respectively).
+CSS selectors for each site live in `src/types/sites.ts` (`SITE_CONFIGS`). Reddit supports both new Reddit (shreddit web components) and old Reddit. Twitter re-calls `initContentScript()` on SPA navigation events (`pushState` intercept).
 
 ### Storage schema
 
-Defined in `src/types/storage.ts`. Per-site enable flags use keys `site_reddit`, `site_twitter`, `site_youtube`. API keys (`tmdb_api_key`, `mal_client_id`) are user-supplied and stored in `chrome.storage.local` — they are not in the schema type but are accessed directly by the service worker.
+Defined in `src/types/storage.ts`. Per-site enable flags use keys `site_reddit`, `site_twitter`. API keys (`tmdb_api_key`, `mal_client_id`) are user-supplied and stored in `chrome.storage.local` — they are not in the schema type but are accessed directly by the service worker.

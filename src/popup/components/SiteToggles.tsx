@@ -10,7 +10,6 @@ interface SiteRow {
 const SITES: SiteRow[] = [
   { id: 'reddit',  label: 'Reddit',      icon: '🤖' },
   { id: 'twitter', label: 'Twitter / X',  icon: '🐦' },
-  { id: 'youtube', label: 'YouTube',      icon: '▶️' },
 ];
 
 interface Props {
